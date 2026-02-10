@@ -12,10 +12,9 @@
 
 use anyhow::Result;
 use clap::Parser;
-use rand::Fill;
 use rayon::prelude::*;
 use rocksdb_examples::rocksdb_utils::{open_rocksdb_for_bulk_ingestion, print_rocksdb_stats};
-use rocksdb_examples::utils::{bytes_to_hex, make_progress_bar};
+use rocksdb_examples::utils::{generate_random_hex_string, make_progress_bar};
 use rust_rocksdb::WriteBatch;
 
 const NUM_THREADS: usize = 8;
@@ -40,20 +39,11 @@ fn main() -> Result<()> {
         .build_global()?;
 
     (0..NUM_THREADS).into_par_iter().for_each(|_| {
-        let mut rng = rand::rng();
         let mut write_batch = WriteBatch::default();
 
         for _ in 0..ENTRIES_PER_THREAD {
-            let key = {
-                let mut key_bytes = [0u8; RAND_BYTES_LEN];
-                Fill::fill_slice(&mut key_bytes, &mut rng);
-                bytes_to_hex(&key_bytes)
-            };
-            let val = {
-                let mut val_bytes = [0u8; RAND_BYTES_LEN];
-                Fill::fill_slice(&mut val_bytes, &mut rng);
-                bytes_to_hex(&val_bytes)
-            };
+            let key = generate_random_hex_string(RAND_BYTES_LEN);
+            let val = generate_random_hex_string(RAND_BYTES_LEN);
             write_batch.put(key.as_bytes(), val.as_bytes());
             pb.inc(1);
         }

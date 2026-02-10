@@ -15,9 +15,9 @@
 use anyhow::Result;
 use clap::Parser;
 use rayon::prelude::*;
-use rust_rocksdb::{Direction, IteratorMode};
 use rocksdb_examples::rocksdb_utils::{open_rocksdb_for_read_only, print_rocksdb_stats};
-use rocksdb_examples::utils::{generate_hex_strings, handle_input, make_progress_bar};
+use rocksdb_examples::utils::{generate_consecutive_hex_strings, handle_input, make_progress_bar};
+use rust_rocksdb::{Direction, IteratorMode};
 
 #[derive(Parser)]
 struct Cli {
@@ -60,7 +60,7 @@ fn main() -> Result<()> {
     } else if args.print_stats {
         print_rocksdb_stats(&db)?;
     } else if args.count {
-        let prefixes = generate_hex_strings(4);
+        let prefixes = generate_consecutive_hex_strings(4);
         let pb = make_progress_bar(Some(prefixes.len() as u64));
 
         let count = prefixes

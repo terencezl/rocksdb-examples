@@ -11,9 +11,8 @@
 
 use anyhow::Result;
 use clap::Parser;
-use rand::Fill;
 use rocksdb_examples::rocksdb_utils::open_rocksdb_for_write;
-use rocksdb_examples::utils::bytes_to_hex;
+use rocksdb_examples::utils::generate_random_hex_string;
 
 const RAND_BYTES_LEN: usize = 16;
 
@@ -27,17 +26,8 @@ fn main() -> Result<()> {
     let args = Cli::parse();
     let db = open_rocksdb_for_write(&args.db_dir)?;
 
-    let mut rng = rand::rng();
-    let key = {
-        let mut key_bytes = [0u8; RAND_BYTES_LEN];
-        Fill::fill_slice(&mut key_bytes, &mut rng);
-        bytes_to_hex(&key_bytes)
-    };
-    let val = {
-        let mut val_bytes = [0u8; RAND_BYTES_LEN];
-        Fill::fill_slice(&mut val_bytes, &mut rng);
-        bytes_to_hex(&val_bytes)
-    };
+    let key = generate_random_hex_string(RAND_BYTES_LEN);
+    let val = generate_random_hex_string(RAND_BYTES_LEN);
     db.put(key.as_bytes(), val.as_bytes())?;
 
     println!("key: {}", key);

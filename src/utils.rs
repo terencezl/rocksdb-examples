@@ -1,8 +1,16 @@
 use indicatif::{ProgressBar, ProgressStyle};
+use rand::RngExt;
 
-pub fn generate_hex_strings(n_digits: u32) -> Vec<String> {
+pub fn generate_consecutive_hex_strings(n_digits: u32) -> Vec<String> {
     (0..16_u64.pow(n_digits))
         .map(|i| format!("{i:0width$x}", width = n_digits as usize))
+        .collect()
+}
+
+pub fn generate_random_hex_string(n_digits: usize) -> String {
+    let mut rng = rand::rng();
+    (0..n_digits)
+        .map(|_| format!("{:x}", rng.random_range(0..16)))
         .collect()
 }
 
@@ -23,16 +31,11 @@ pub fn make_progress_bar(total: Option<u64>) -> ProgressBar {
             sty = ProgressStyle::with_template(
                 "{spinner:.cyan} {pos:>7} [{elapsed_precise} {per_sec:.green}]",
             )
-            .unwrap()
-            .progress_chars("█▓▒░");
+            .unwrap();
         }
     }
     pb.set_style(sty);
     pb
-}
-
-pub fn bytes_to_hex(bytes: &[u8]) -> String {
-    bytes.iter().map(|b| format!("{:02x}", b)).collect()
 }
 
 pub fn handle_input() {
