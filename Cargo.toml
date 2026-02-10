@@ -1,0 +1,14 @@
+[package]
+name = "rocksdb-examples"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1"
+clap = { version = "4", features = ["derive"] }
+rust-rocksdb = "0.46"
+num_cpus = "1.16.0"
+nbytes = "0.1.0"
+indicatif = "0.18.3"
+rayon = "1.11.0"
+rand = "0.10"
