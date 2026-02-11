@@ -35,8 +35,7 @@ fn main() -> Result<()> {
             let prefix = prefix.as_bytes();
             let mut db_iter = db.full_iterator(IteratorMode::From(prefix, Direction::Forward));
             let mut count = 0;
-            while let Some(item) = db_iter.next() {
-                let (key, _value) = item.unwrap();
+            while let Some(Ok((key, _value))) = db_iter.next() {
                 if &key[..prefix.len()] != prefix {
                     break;
                 }

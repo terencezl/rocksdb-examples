@@ -48,8 +48,7 @@ fn main() -> Result<()> {
     } else if args.one_by_one {
         // iterator from start
         let mut db_iter = db.full_iterator(IteratorMode::Start);
-        while let Some(item) = db_iter.next() {
-            let (key, value) = item.unwrap();
+        while let Some(Ok((key, value))) = db_iter.next() {
             println!(
                 "key: {} value: {}",
                 String::from_utf8_lossy(&key),
@@ -69,8 +68,7 @@ fn main() -> Result<()> {
                 let prefix = prefix.as_bytes();
                 let mut db_iter = db.full_iterator(IteratorMode::From(prefix, Direction::Forward));
                 let mut count = 0;
-                while let Some(item) = db_iter.next() {
-                    let (key, _value) = item.unwrap();
+                while let Some(Ok((key, _value))) = db_iter.next() {
                     if &key[..prefix.len()] != prefix {
                         break;
                     }
