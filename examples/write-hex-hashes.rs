@@ -2,11 +2,10 @@
 //!
 //! Usage:
 //! ```
-//! cargo run --example write_hex_hashes -- --db-dir data.rocksdb
+//! cargo run --example write-hex-hashes -- --db-dir data.rocksdb
 //! ```
 //!
 //! This will write NUM_ENTRIES entries to the DB.
-//! The DB is expected to be in the format of write_hex_hashes.rs.
 //! Keys and values are random raw bytes encoded as hex strings.
 //! Parallelized by NUM_THREADS chunks; each thread uses WriteBatch and write without WAL; flush at end. Then compact the DB.
 
@@ -20,7 +19,9 @@ use rust_rocksdb::WriteBatch;
 const NUM_THREADS: usize = 8;
 const NUM_ENTRIES: usize = NUM_THREADS * 100_000;
 const ENTRIES_PER_THREAD: usize = NUM_ENTRIES / NUM_THREADS;
-const RAND_BYTES_LEN: usize = 16;
+const KEY_LEN: usize = 16;
+const VAL_LEN: usize = 3;
+const ROCKSDB_NUM_LEVELS: i32 = 7;
 
 #[derive(Parser)]
 struct Cli {
@@ -30,7 +31,7 @@ struct Cli {
 
 fn main() -> Result<()> {
     let args = Cli::parse();
-    let db = open_rocksdb_for_bulk_ingestion(&args.db_dir, Some(7), None)?;
+    let db = open_rocksdb_for_bulk_ingestion(&args.db_dir, Some(ROCKSDB_NUM_LEVELS), None)?;
 
     let pb = make_progress_bar(Some(NUM_ENTRIES as u64));
 
@@ -42,8 +43,8 @@ fn main() -> Result<()> {
         let mut write_batch = WriteBatch::default();
 
         for _ in 0..ENTRIES_PER_THREAD {
-            let key = generate_random_hex_string(RAND_BYTES_LEN);
-            let val = generate_random_hex_string(RAND_BYTES_LEN);
+            let key = generate_random_hex_string(KEY_LEN);
+            let val = generate_random_hex_string(VAL_LEN);
             write_batch.put(key.as_bytes(), val.as_bytes());
             pb.inc(1);
         }
@@ -51,10 +52,9 @@ fn main() -> Result<()> {
         db.write_without_wal(&write_batch).unwrap();
     });
 
-    pb.finish_with_message("done");
-
     db.flush()?;
 
+    pb.finish_with_message("done");
     println!(
         "Wrote {} entries to {} (hex keys and values from random bytes)",
         NUM_ENTRIES, args.db_dir
@@ -66,11 +66,10 @@ fn main() -> Result<()> {
     print_rocksdb_stats(&db)?;
 
     // Compaction
-    let target_level = 6; // default bottommost level
     let mut compaction_opts = rust_rocksdb::CompactOptions::default();
     compaction_opts.set_exclusive_manual_compaction(true);
     compaction_opts.set_change_level(true);
-    compaction_opts.set_target_level(target_level);
+    compaction_opts.set_target_level(ROCKSDB_NUM_LEVELS - 1);
     compaction_opts
         .set_bottommost_level_compaction(rust_rocksdb::BottommostLevelCompaction::ForceOptimized);
     db.compact_range_opt(None::<&[u8]>, None::<&[u8]>, &compaction_opts);

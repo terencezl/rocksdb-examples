@@ -9,9 +9,9 @@
 //! ```
 //!
 //! This will inspect the DB.
-//! The DB is expected to be in the format of write_hex_hashes.rs.
 //! Key and value are random raw bytes encoded as hex strings.
 //! You can inspect the DB by key, one by one, printing stats, or counting the number of keys that start with a given prefix.
+
 use anyhow::Result;
 use clap::Parser;
 use rayon::prelude::*;
@@ -59,7 +59,7 @@ fn main() -> Result<()> {
     } else if args.print_stats {
         print_rocksdb_stats(&db)?;
     } else if args.count {
-        let prefixes = generate_consecutive_hex_strings(4);
+        let prefixes = generate_consecutive_hex_strings(3);
         let pb = make_progress_bar(Some(prefixes.len() as u64));
 
         let count = prefixes

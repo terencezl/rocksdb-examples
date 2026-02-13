@@ -6,7 +6,6 @@
 //! ```
 //!
 //! This will write a random key and value to the DB and then read the value back.
-//! The DB is expected to be in the format of write_hex_hashes.rs.
 //! Key and value are random raw bytes encoded as hex strings.
 
 use anyhow::Result;
@@ -14,7 +13,8 @@ use clap::Parser;
 use rocksdb_examples::rocksdb_utils::open_rocksdb_for_write;
 use rocksdb_examples::utils::generate_random_hex_string;
 
-const RAND_BYTES_LEN: usize = 16;
+const KEY_LEN: usize = 16;
+const VAL_LEN: usize = 3;
 
 #[derive(Parser)]
 struct Cli {
@@ -26,8 +26,8 @@ fn main() -> Result<()> {
     let args = Cli::parse();
     let db = open_rocksdb_for_write(&args.db_dir)?;
 
-    let key = generate_random_hex_string(RAND_BYTES_LEN);
-    let val = generate_random_hex_string(RAND_BYTES_LEN);
+    let key = generate_random_hex_string(KEY_LEN);
+    let val = generate_random_hex_string(VAL_LEN);
     db.put(key.as_bytes(), val.as_bytes())?;
 
     println!("key: {}", key);

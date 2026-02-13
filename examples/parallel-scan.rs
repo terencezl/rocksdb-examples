@@ -5,8 +5,7 @@
 //! cargo run --example parallel_scan -- --db-dir data.rocksdb
 //! ```
 //!
-//! This will scan the DB for all keys that start with the first 4 characters of the hex string.
-//! The DB is expected to be in the format of write_hex_hashes.rs.
+//! This will scan the DB for all keys in each DB.
 //! Parallelized by rayon's default thread pool (RAYON_NUM_THREADS); each thread scans the DB for keys that start with the first 4 characters of the hex string.
 
 use anyhow::Result;
@@ -26,7 +25,7 @@ fn main() -> Result<()> {
     let args = Cli::parse();
     let db = open_rocksdb_for_read_only(&args.db_dir, true)?;
 
-    let prefixes = generate_consecutive_hex_strings(4);
+    let prefixes = generate_consecutive_hex_strings(3);
     let pb = make_progress_bar(Some(prefixes.len() as u64));
 
     let count = prefixes

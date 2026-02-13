@@ -1,3 +1,15 @@
+//! Two pointer parallel scan of hex keys.
+//!
+//! Usage:
+//! ```
+//! cargo run --example two-pointer-parallel -- --db-dir-left data1.rocksdb --db-dir-right data2.rocksdb
+//! ```
+//!
+//! This will scan the two DBs for all keys in each DB.
+//! Parallelized by rayon's default thread pool (RAYON_NUM_THREADS); each thread scans the DB for keys that start with the first 4 characters of the hex string.
+//! Key and value are random raw bytes encoded as hex strings.
+//! It will print the total number of keys in each DB and the number of keys in the intersection.
+
 use anyhow::Result;
 use clap::Parser;
 use rayon::prelude::*;
@@ -24,7 +36,7 @@ fn main() -> Result<()> {
     let db_left = open_rocksdb_for_read_only(&args.db_dir_left, true)?;
     let db_right = open_rocksdb_for_read_only(&args.db_dir_right, true)?;
 
-    let prefixes = generate_consecutive_hex_strings(4);
+    let prefixes = generate_consecutive_hex_strings(3);
     let pb = make_progress_bar(Some(prefixes.len() as u64));
 
     let counts = prefixes

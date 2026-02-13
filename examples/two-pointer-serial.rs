@@ -1,3 +1,14 @@
+//! Two pointer serial scan of hex keys.
+//!
+//! Usage:
+//! ```
+//! cargo run --example two-pointer-serial -- --db-dir-left data1.rocksdb --db-dir-right data2.rocksdb
+//! ```
+//!
+//! This will scan the two DBs for all keys in each DB.
+//! Key and value are random raw bytes encoded as hex strings.
+//! It will print the total number of keys in each DB and the number of keys in the intersection.
+
 use anyhow::Result;
 use clap::Parser;
 use rocksdb_examples::rocksdb_utils::open_rocksdb_for_read_only;
