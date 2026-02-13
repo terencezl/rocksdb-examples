@@ -6,8 +6,8 @@
 //! cargo run --example map-reduce -- --step reduce --db-dir data-mapped.rocksdb --output-db-dir data-reduced.rocksdb
 //! ```
 //!
-//! Map step: (key, value) -> (value.hex(key), key).
-//! Reduce step: group by value (strip the .hex(key) suffix) and join grouped keys with '|'.
+//! Map step: (key, value) -> (value + '\0' + hex(key), key).
+//! Reduce step: group by value (strip the '\0' + hex(key) suffix) and join grouped keys with '|'.
 
 use anyhow::Result;
 use clap::Parser;
@@ -55,12 +55,16 @@ fn main() -> Result<()> {
                             break;
                         }
 
-                        let value_str = String::from_utf8_lossy(value.as_ref());
                         let key_hex = hex::encode(key.as_ref());
-                        let new_key = format!("{}.{}", value_str, key_hex);
+                        let new_key: Vec<u8> = value
+                            .iter()
+                            .chain(std::iter::once(&0u8))
+                            .chain(key_hex.as_bytes())
+                            .cloned()
+                            .collect();
                         let new_value = key;
 
-                        write_batch.put(new_key.as_bytes(), &new_value);
+                        write_batch.put(&new_key, &new_value);
                         count += 1;
                     }
                     output_db.write_without_wal(&write_batch).unwrap();
@@ -95,11 +99,11 @@ fn main() -> Result<()> {
                             break;
                         }
 
-                        // key is "value_str.key_hex"; group by value_str = everything before last '.'
-                        let dot = key.iter().rposition(|&b| b == b'.').unwrap_or_else(|| {
+                        // key is value + '\0' + key_hex; group by value = everything before first '\0'
+                        let sep = key.iter().position(|&b| b == 0).unwrap_or_else(|| {
                             panic!("Invalid key: {}", String::from_utf8_lossy(&key))
                         });
-                        let new_key = key[..dot].to_vec();
+                        let new_key = key[..sep].to_vec();
 
                         if new_key != prev_key {
                             if !prev_key.is_empty() {
